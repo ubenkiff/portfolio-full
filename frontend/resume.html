@@ -1,30 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Resume - Uddi Benkiff</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uddi Benkiff Awinda - Resume</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; margin: 0; padding: 0; }
+      .shadow-lg { box-shadow: none !important; }
+      .border-b-2 { border-bottom-width: 1px !important; }
+    }
+  </style>
 </head>
 <body class="bg-slate-100">
-    <div class="max-w-4xl mx-auto bg-white p-8 m-8 shadow-lg">
-        <div id="resume-content">Loading resume...</div>
-        <div class="text-center mt-4 no-print">
-            <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Print</button>
-        </div>
-    </div>
-    <script>
-        fetch('/api/resume/data')
-            .then(res => res.json())
-            .then(data => {
-                const profile = data.profile || {};
-                document.getElementById('resume-content').innerHTML = `
-                    <h1 class="text-2xl font-bold">${profile.name || 'Uddi Benkiff Awinda'}</h1>
-                    <p class="text-blue-600">${profile.title || 'Civil Engineer'}</p>
-                    <p>${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}</p>
-                    <hr class="my-4">
-                    <h2 class="font-bold mt-4">Personal Statement</h2>
-                    <p>${profile.bio || ''}</p>
-                `;
-            });
-    </script>
+  <!-- Toolbar -->
+  <div class="no-print bg-slate-800 text-white px-6 py-3 flex justify-between sticky top-0 z-10">
+    <a href="/" class="text-slate-300 hover:text-white">← Back to Portfolio</a>
+    <button onclick="window.print()" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white">🖨️ Print / Download PDF</button>
+  </div>
+
+  <div id="resume-content" class="max-w-4xl mx-auto p-8">
+    <div class="text-center text-xl">Loading resume...</div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+
+    async function loadResume() {
+      try {
+        const res = await fetch(`${API_URL}/resume/data`);
+        const data = await res.json();
+        const { profile = {}, experience = [], education = [], skills = [], projects = [], achievements = [] } = data;
+
+        // Group skills by category
+        const skillsByCategory = {};
+        skills.forEach(s => {
+          if (!skillsByCategory[s.category]) skillsByCategory[s.category] = [];
+          skillsByCategory[s.category].push(s);
+        });
+
+        let html = `
+          <div class="bg-white shadow-lg print:shadow-none">
+            <div class="p-10 print:p-8">
+              <!-- Header with Avatar -->
+              <div class="border-b-2 border-blue-500 pb-4 mb-6">
+                <div class="flex gap-6">
+                  ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-24 h-24 rounded-full object-cover border-2 border-blue-500">` : ''}
+                  <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-gray-800">${profile.name || 'Uddi Benkiff Awinda'}</h1>
+                    <p class="text-sm font-semibold text-blue-600 uppercase tracking-wide mt-1">${profile.title || 'PM | Civil Projects Engineer | Structural Design Engineer'}</p>
+                    <div class="flex flex-wrap gap-4 text-xs text-gray-600 mt-3">
+                      ${profile.email ? `<span>📧 ${profile.email}</span>` : ''}
+                      ${profile.phone ? `<span>📞 ${profile.phone}</span>` : ''}
+                      ${profile.location ? `<span>📍 ${profile.location}</span>` : ''}
+                      ${profile.linkedin ? `<span>🔗 ${profile.linkedin}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-8">
+                <!-- Left Column -->
+                <div class="flex-1 space-y-5">
+                  ${profile.bio ? `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Personal Statement</h2>
+                      <p class="text-xs text-gray-700 mt-2 leading-relaxed">${profile.bio}</p>
+                    </div>
+                  ` : ''}
+
+                  ${experience.length > 0 ? `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Professional Experience</h2>
+                      <div class="space-y-4 mt-3">
+                        ${experience.map((exp, idx) => `
+                          <div>
+                            <div class="flex justify-between flex-wrap">
+                              <h3 class="text-sm font-bold text-gray-800">${exp.job_title}</h3>
+                              <span class="text-xs text-gray-500">${exp.start_date} — ${exp.current ? 'Present' : exp.end_date}</span>
+                            </div>
+                            <p class="text-xs text-blue-600 font-medium">${exp.company}${exp.location ? ` | ${exp.location}` : ''}</p>
+                            <p class="text-xs text-gray-600 mt-1">${exp.description || ''}</p>
+                            ${exp.highlights && exp.highlights.length > 0 ? `<ul class="mt-2 space-y-0.5">${exp.highlights.map(h => `<li class="text-xs text-gray-600 flex items-start gap-1.5"><span class="text-blue-500">•</span> ${h}</li>`).join('')}</ul>` : ''}
+                            ${idx < experience.length - 1 ? '<div class="border-b border-gray-200 mt-4"></div>' : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+
+                  ${projects.length > 0 ? `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Key Projects</h2>
+                      <div class="space-y-3 mt-3">
+                        ${projects.map((p, idx) => `
+                          <div>
+                            <div class="flex gap-3 items-start">
+                              ${p.image_urls && p.image_urls[0] ? `<img src="${p.image_urls[0]}" class="w-10 h-10 rounded object-cover">` : ''}
+                              <div class="flex-1">
+                                <h3 class="text-sm font-bold text-gray-800">${p.title}</h3>
+                                <p class="text-xs text-gray-600">${p.description || ''}</p>
+                                ${p.tech_stack && p.tech_stack.length > 0 ? `<div class="flex flex-wrap gap-1 mt-1">${p.tech_stack.slice(0, 3).map(t => `<span class="text-xs text-gray-400">• ${t}</span>`).join('')}</div>` : ''}
+                              </div>
+                            </div>
+                            ${idx < projects.length - 1 ? '<div class="border-b border-gray-200 mt-3"></div>' : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+
+                  ${education.length > 0 ? `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Education</h2>
+                      <div class="space-y-3 mt-3">
+                        ${education.map((edu, idx) => `
+                          <div>
+                            <div class="flex justify-between flex-wrap">
+                              <h3 class="text-sm font-bold text-gray-800">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</h3>
+                              <span class="text-xs text-gray-500">${edu.start_year} — ${edu.end_year || 'Present'}</span>
+                            </div>
+                            <p class="text-xs text-gray-600">${edu.institution}${edu.location ? `, ${edu.location}` : ''}</p>
+                            ${edu.grade ? `<p class="text-xs text-yellow-600 mt-0.5">🎓 Grade: ${edu.grade}</p>` : ''}
+                            ${idx < education.length - 1 ? '<div class="border-b border-gray-200 mt-3"></div>' : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Right Column -->
+                <div class="w-48 shrink-0 space-y-5">
+                  ${Object.keys(skillsByCategory).map(cat => `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">${cat}</h2>
+                      <ul class="mt-2 space-y-1">
+                        ${skillsByCategory[cat].map(s => `<li class="text-xs text-gray-700 flex items-center gap-1.5"><span class="h-1 w-1 rounded-full bg-blue-500"></span> ${s.name}</li>`).join('')}
+                      </ul>
+                    </div>
+                  `).join('')}
+
+                  ${achievements.length > 0 ? `
+                    <div>
+                      <h2 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Achievements</h2>
+                      <div class="mt-2 space-y-2">
+                        ${achievements.map((a, idx) => `
+                          <div>
+                            <p class="text-xs font-semibold text-gray-800">${a.title}</p>
+                            <p class="text-xs text-gray-500">${a.issuer}</p>
+                            ${idx < achievements.length - 1 ? '<div class="border-b border-gray-200 mt-2"></div>' : ''}
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('resume-content').innerHTML = html;
+      } catch (error) {
+        document.getElementById('resume-content').innerHTML = `<div class="text-red-500 text-center p-8">Error loading resume. Please try again.</div>`;
+        console.error(error);
+      }
+    }
+
+    loadResume();
+  </script>
 </body>
 </html>
