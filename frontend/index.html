@@ -3,12 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Admin</title>
+  <title>Uddi Benkiff - Portfolio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/admin.jsx"></script>
+<body class="bg-slate-900">
+  <div id="content" class="max-w-6xl mx-auto p-8">
+    <div class="text-center text-white text-xl">Loading portfolio...</div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+
+    async function loadPortfolio() {
+      try {
+        const profile = await fetch(`${API_URL}/profile`).then(r => r.json());
+        
+        document.getElementById('content').innerHTML = `
+          <div class="bg-slate-800 rounded-2xl p-8">
+            <div class="flex flex-col md:flex-row gap-6 items-center">
+              ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-32 h-32 rounded-full object-cover border-4 border-blue-500">` : ''}
+              <div class="text-center md:text-left">
+                <h1 class="text-3xl font-bold text-white">${profile.name || 'Uddi Benkiff Awinda'}</h1>
+                <p class="text-xl text-blue-400 mt-2">${profile.title || 'Civil Engineer'}</p>
+                <p class="text-slate-300 mt-4">${profile.bio || ''}</p>
+                <div class="flex flex-wrap gap-4 mt-4 text-slate-400">
+                  ${profile.email ? `<span><i class="fas fa-envelope"></i> ${profile.email}</span>` : ''}
+                  ${profile.phone ? `<span><i class="fas fa-phone"></i> ${profile.phone}</span>` : ''}
+                  ${profile.location ? `<span><i class="fas fa-map-marker-alt"></i> ${profile.location}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        document.getElementById('content').innerHTML = `<div class="text-red-500 text-center p-8">Error loading data. Please try again.</div>`;
+        console.error(error);
+      }
+    }
+
+    loadPortfolio();
+  </script>
 </body>
 </html>
