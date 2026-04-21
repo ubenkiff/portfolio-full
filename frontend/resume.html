@@ -1,29 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Uddi Benkiff - Resume</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print {
-      .no-print {
-        display: none !important;
-      }
-      body {
-        background: white;
-        margin: 0;
-        padding: 0;
-      }
-      .shadow-lg {
-        box-shadow: none !important;
-      }
-    }
-  </style>
+    <title>Resume - Uddi Benkiff</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/ResumePage.jsx"></script>
+<body class="bg-slate-100">
+    <div class="max-w-4xl mx-auto bg-white p-8 m-8 shadow-lg">
+        <div id="resume-content">Loading resume...</div>
+        <div class="text-center mt-4 no-print">
+            <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded">Print</button>
+        </div>
+    </div>
+    <script>
+        fetch('/api/resume/data')
+            .then(res => res.json())
+            .then(data => {
+                const profile = data.profile || {};
+                document.getElementById('resume-content').innerHTML = `
+                    <h1 class="text-2xl font-bold">${profile.name || 'Uddi Benkiff Awinda'}</h1>
+                    <p class="text-blue-600">${profile.title || 'Civil Engineer'}</p>
+                    <p>${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}</p>
+                    <hr class="my-4">
+                    <h2 class="font-bold mt-4">Personal Statement</h2>
+                    <p>${profile.bio || ''}</p>
+                `;
+            });
+    </script>
 </body>
 </html>
