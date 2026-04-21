@@ -1,0 +1,47 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000/api';
+
+function ResumePage() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${API_URL}/profile`)
+      .then(res => {
+        setProfile(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading resume...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-8">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg p-8">
+        <h1 className="text-3xl font-bold">{profile?.name || 'Uddi Benkiff Awinda'}</h1>
+        <p className="text-blue-600 mt-2">{profile?.title || 'Civil Engineer'}</p>
+        <div className="mt-4 text-gray-600">
+          {profile?.email && <p>Email: {profile.email}</p>}
+          {profile?.phone && <p>Phone: {profile.phone}</p>}
+          {profile?.location && <p>Location: {profile.location}</p>}
+        </div>
+        <button 
+          onClick={() => window.print()} 
+          className="mt-6 px-4 py-2 bg-blue-600 text-white rounded no-print"
+        >
+          Print Resume
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default ResumePage;

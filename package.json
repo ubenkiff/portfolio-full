@@ -1,0 +1,7 @@
+{
+  "name": "portfolio-deploy",
+  "scripts": {
+    "build": "cd frontend && npm install",
+    "start": "cd backend && node index.js"
+  }
+}
