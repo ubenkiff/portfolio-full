@@ -2,34 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './db.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Helper function to parse various date formats
-function parseDate(dateStr) {
-  if (!dateStr) return new Date(0);
-  
-  const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-  const lower = dateStr.toLowerCase();
-  
-  // Handle "April 2026" format
-  for (let i = 0; i < months.length; i++) {
-    if (lower.includes(months[i])) {
-      const year = parseInt(dateStr.match(/\d{4}/)?.[0] || '2000');
-      return new Date(year, i, 1);
-    }
-  }
-  
-  // Handle "2025" format
-  if (dateStr.match(/^\d{4}$/)) {
-    return new Date(parseInt(dateStr), 0, 1);
-  }
-  
-  return new Date(dateStr);
-}
+dotenv.config();
 
 // Configure Cloudinary
 cloudinary.config({
@@ -54,6 +36,31 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the frontend folder
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Serve portfolio.html at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/portfolio.html'));
+});
+
+// Helper function to parse various date formats
+function parseDate(dateStr) {
+  if (!dateStr) return new Date(0);
+  const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const lower = dateStr.toLowerCase();
+  for (let i = 0; i < months.length; i++) {
+    if (lower.includes(months[i])) {
+      const year = parseInt(dateStr.match(/\d{4}/)?.[0] || '2000');
+      return new Date(year, i, 1);
+    }
+  }
+  if (dateStr.match(/^\d{4}$/)) {
+    return new Date(parseInt(dateStr), 0, 1);
+  }
+  return new Date(dateStr);
+}
+
 // ============ PROFILE ROUTES ============
 app.get('/api/profile', async (req, res) => {
   try {
@@ -67,21 +74,11 @@ app.get('/api/profile', async (req, res) => {
 app.post('/api/profile', async (req, res) => {
   try {
     const { name, title, bio, location, email, phone, linkedin, github, avatar_url } = req.body;
-    
     const existing = await pool.query('SELECT * FROM profile WHERE id = 1');
-    
     if (existing.rows.length === 0) {
-      await pool.query(`
-        INSERT INTO profile (id, name, title, bio, location, email, phone, linkedin, github, avatar_url)
-        VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9)
-      `, [name, title, bio, location, email, phone, linkedin, github, avatar_url]);
+      await pool.query(`INSERT INTO profile (id, name, title, bio, location, email, phone, linkedin, github, avatar_url) VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9)`, [name, title, bio, location, email, phone, linkedin, github, avatar_url]);
     } else {
-      await pool.query(`
-        UPDATE profile SET
-          name = $1, title = $2, bio = $3, location = $4,
-          email = $5, phone = $6, linkedin = $7, github = $8, avatar_url = $9
-        WHERE id = 1
-      `, [name, title, bio, location, email, phone, linkedin, github, avatar_url]);
+      await pool.query(`UPDATE profile SET name = $1, title = $2, bio = $3, location = $4, email = $5, phone = $6, linkedin = $7, github = $8, avatar_url = $9 WHERE id = 1`, [name, title, bio, location, email, phone, linkedin, github, avatar_url]);
     }
     res.json({ success: true });
   } catch (error) {
@@ -107,11 +104,7 @@ app.get('/api/experience', async (req, res) => {
 app.post('/api/experience', async (req, res) => {
   try {
     const { job_title, company, location, start_date, end_date, current, description, highlights } = req.body;
-    const result = await pool.query(`
-      INSERT INTO experience (job_title, company, location, start_date, end_date, current, description, highlights)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `, [job_title, company, location, start_date, end_date, current, description, highlights]);
+    const result = await pool.query(`INSERT INTO experience (job_title, company, location, start_date, end_date, current, description, highlights) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`, [job_title, company, location, start_date, end_date, current, description, highlights]);
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -122,12 +115,7 @@ app.put('/api/experience/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { job_title, company, location, start_date, end_date, current, description, highlights } = req.body;
-    await pool.query(`
-      UPDATE experience SET
-        job_title = $1, company = $2, location = $3, start_date = $4,
-        end_date = $5, current = $6, description = $7, highlights = $8
-      WHERE id = $9
-    `, [job_title, company, location, start_date, end_date, current, description, highlights, id]);
+    await pool.query(`UPDATE experience SET job_title = $1, company = $2, location = $3, start_date = $4, end_date = $5, current = $6, description = $7, highlights = $8 WHERE id = $9`, [job_title, company, location, start_date, end_date, current, description, highlights, id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -159,12 +147,8 @@ app.get('/api/education', async (req, res) => {
 
 app.post('/api/education', async (req, res) => {
   try {
-    const { degree, field, institution, start_year, end_year } = req.body;
-    const result = await pool.query(`
-      INSERT INTO education (degree, field, institution, start_year, end_year)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *
-    `, [degree, field, institution, start_year, end_year]);
+    const { degree, field, institution, location, start_year, end_year, grade, description } = req.body;
+    const result = await pool.query(`INSERT INTO education (degree, field, institution, location, start_year, end_year, grade, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`, [degree, field, institution, location, start_year, end_year, grade, description]);
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -174,12 +158,8 @@ app.post('/api/education', async (req, res) => {
 app.put('/api/education/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { degree, field, institution, start_year, end_year } = req.body;
-    await pool.query(`
-      UPDATE education SET
-        degree = $1, field = $2, institution = $3, start_year = $4, end_year = $5
-      WHERE id = $6
-    `, [degree, field, institution, start_year, end_year, id]);
+    const { degree, field, institution, location, start_year, end_year, grade, description } = req.body;
+    await pool.query(`UPDATE education SET degree = $1, field = $2, institution = $3, location = $4, start_year = $5, end_year = $6, grade = $7, description = $8 WHERE id = $9`, [degree, field, institution, location, start_year, end_year, grade, description, id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -209,11 +189,7 @@ app.get('/api/skills', async (req, res) => {
 app.post('/api/skills', async (req, res) => {
   try {
     const { name, category, level } = req.body;
-    const result = await pool.query(`
-      INSERT INTO skills (name, category, level)
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `, [name, category, level]);
+    const result = await pool.query(`INSERT INTO skills (name, category, level) VALUES ($1, $2, $3) RETURNING *`, [name, category, level]);
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -224,10 +200,7 @@ app.put('/api/skills/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, category, level } = req.body;
-    await pool.query(`
-      UPDATE skills SET name = $1, category = $2, level = $3
-      WHERE id = $4
-    `, [name, category, level, id]);
+    await pool.query(`UPDATE skills SET name = $1, category = $2, level = $3 WHERE id = $4`, [name, category, level, id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -257,11 +230,7 @@ app.get('/api/projects', async (req, res) => {
 app.post('/api/projects', async (req, res) => {
   try {
     const { title, description, tech_stack, live_url, github_url, image_urls, featured } = req.body;
-    const result = await pool.query(`
-      INSERT INTO projects (title, description, tech_stack, live_url, github_url, image_urls, featured)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *
-    `, [title, description, tech_stack, live_url, github_url, image_urls, featured || false]);
+    const result = await pool.query(`INSERT INTO projects (title, description, tech_stack, live_url, github_url, image_urls, featured) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, [title, description, tech_stack, live_url, github_url, image_urls, featured || false]);
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -272,12 +241,7 @@ app.put('/api/projects/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, tech_stack, live_url, github_url, image_urls, featured } = req.body;
-    await pool.query(`
-      UPDATE projects SET
-        title = $1, description = $2, tech_stack = $3,
-        live_url = $4, github_url = $5, image_urls = $6, featured = $7
-      WHERE id = $8
-    `, [title, description, tech_stack, live_url, github_url, image_urls, featured || false, id]);
+    await pool.query(`UPDATE projects SET title = $1, description = $2, tech_stack = $3, live_url = $4, github_url = $5, image_urls = $6, featured = $7 WHERE id = $8`, [title, description, tech_stack, live_url, github_url, image_urls, featured || false, id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -319,11 +283,7 @@ app.get('/api/achievements', async (req, res) => {
 app.post('/api/achievements', async (req, res) => {
   try {
     const { title, issuer, date, description, category, url } = req.body;
-    const result = await pool.query(`
-      INSERT INTO achievements (title, issuer, date, description, category, url)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `, [title, issuer, date, description, category, url]);
+    const result = await pool.query(`INSERT INTO achievements (title, issuer, date, description, category, url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, issuer, date, description, category, url]);
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -334,11 +294,7 @@ app.put('/api/achievements/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { title, issuer, date, description, category, url } = req.body;
-    await pool.query(`
-      UPDATE achievements SET
-        title = $1, issuer = $2, date = $3, description = $4, category = $5, url = $6
-      WHERE id = $7
-    `, [title, issuer, date, description, category, url, id]);
+    await pool.query(`UPDATE achievements SET title = $1, issuer = $2, date = $3, description = $4, category = $5, url = $6 WHERE id = $7`, [title, issuer, date, description, category, url, id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -359,23 +315,19 @@ app.delete('/api/achievements/:id', async (req, res) => {
 app.get('/api/resume/data', async (req, res) => {
   try {
     const profile = await pool.query('SELECT * FROM profile WHERE id = 1');
-    
     const experienceResult = await pool.query('SELECT * FROM experience');
     const experience = experienceResult.rows.sort((a, b) => {
       const dateA = parseDate(a.start_date);
       const dateB = parseDate(b.start_date);
       return dateB - dateA;
     });
-    
     const educationResult = await pool.query('SELECT * FROM education');
     const education = educationResult.rows.sort((a, b) => {
       return (parseInt(b.start_year) || 0) - (parseInt(a.start_year) || 0);
     });
-    
     const skills = await pool.query('SELECT * FROM skills ORDER BY category ASC');
     const projects = await pool.query('SELECT * FROM projects ORDER BY featured DESC');
     const achievements = await pool.query('SELECT * FROM achievements ORDER BY date DESC');
-    
     res.json({
       profile: profile.rows[0] || {},
       experience: experience,
