@@ -6,6 +6,7 @@ import EducationManager from './EducationManager';
 import SkillsManager from './SkillsManager';
 import ProjectsManager from './ProjectsManager';
 import AchievementsManager from './AchievementsManager';
+import ATSScore from './ATSScore';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api';
@@ -55,7 +56,8 @@ function AdminLayout() {
     { id: 'education', name: 'Education', icon: 'fas fa-graduation-cap' },
     { id: 'skills', name: 'Skills', icon: 'fas fa-code' },
     { id: 'projects', name: 'Projects', icon: 'fas fa-folder-open' },
-    { id: 'achievements', name: 'Achievements', icon: 'fas fa-trophy' }
+    { id: 'achievements', name: 'Achievements', icon: 'fas fa-trophy' },
+    { id: 'ats', name: 'ATS Score', icon: 'fas fa-chart-line' }
   ];
 
   const renderContent = () => {
@@ -74,6 +76,8 @@ function AdminLayout() {
         return <ProjectsManager projects={projects} onRefresh={refreshData} />;
       case 'achievements':
         return <AchievementsManager achievements={achievements} onRefresh={refreshData} />;
+      case 'ats':
+        return <ATSScore />;
       default:
         return <Dashboard onNavigate={setCurrentPage} />;
     }
@@ -116,6 +120,12 @@ function AdminLayout() {
             className="block w-full text-left text-slate-400 hover:text-white py-2 text-sm"
           >
             <i className="fas fa-globe w-5 mr-3"></i> Public Portfolio
+          </button>
+          <button
+            onClick={() => setCurrentPage('ats')}
+            className="block w-full text-left text-slate-400 hover:text-white py-2 text-sm"
+          >
+            <i className="fas fa-chart-line w-5 mr-3"></i> ATS Resume
           </button>
         </div>
       </div>
