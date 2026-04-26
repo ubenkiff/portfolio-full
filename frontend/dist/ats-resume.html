@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATS Resume - Uddi Benkiff Awinda</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #000;
+      background: #fff;
+      padding: 0.5in;
+    }
+    .container { max-width: 8.5in; margin: 0 auto; }
+    .header h1 { font-size: 18pt; font-weight: bold; margin: 0 0 4px 0; }
+    .title { font-size: 12pt; font-weight: bold; margin: 0 0 8px 0; }
+    .contact { font-size: 10pt; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-bottom: 12px; }
+    .section { margin-bottom: 16px; }
+    .section h2 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-bottom: 1px solid #ccc;
+      margin: 12px 0 8px 0;
+      padding-bottom: 2px;
+    }
+    .job { margin-bottom: 12px; }
+    .job-header { display: flex; justify-content: space-between; flex-wrap: wrap; margin-bottom: 4px; }
+    .job-title { font-size: 11pt; font-weight: bold; }
+    .company { font-size: 10pt; }
+    .date { font-size: 9pt; color: #555; }
+    .description { font-size: 10pt; margin: 4px 0 0 0; }
+    .highlights { margin: 4px 0 0 0; padding-left: 20px; }
+    .highlights li { font-size: 10pt; margin-bottom: 2px; }
+    .skill-category { margin-bottom: 6px; }
+    .skill-category h3 { font-size: 10pt; font-weight: bold; }
+    .project { margin-bottom: 8px; }
+    .project h3 { font-size: 10pt; font-weight: bold; }
+    .edu-item { margin-bottom: 8px; }
+    .edu-header { display: flex; justify-content: space-between; flex-wrap: wrap; }
+    .achievement { margin-bottom: 6px; }
+    .achievement h3 { font-size: 10pt; font-weight: bold; }
+    .no-print { text-align: center; margin-bottom: 20px; }
+    .no-print button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .no-print button:hover { background: #1d4ed8; }
+    @media print {
+      body { padding: 0; margin: 0; }
+      .no-print { display: none; }
+      @page { size: letter; margin: 0.3in; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button onclick="window.print()">🖨️ Print / Save as PDF</button>
+    <button onclick="window.location.href='/portfolio.html'" style="margin-left: 10px; background: #4b5563;">← Back to Portfolio</button>
+  </div>
+  <div class="container" id="resume-content">
+    <div style="text-align: center; padding: 50px;">Loading ATS-friendly resume...</div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+
+    async function loadATSResume() {
+      try {
+        const res = await fetch(`${API_URL}/resume/data`);
+        const data = await res.json();
+        const { profile = {}, experience = [], education = [], skills = [], projects = [], achievements = [] } = data;
+
+        const skillsByCategory = {};
+        skills.forEach(s => {
+          if (!skillsByCategory[s.category]) skillsByCategory[s.category] = [];
+          skillsByCategory[s.category].push(s);
+        });
+
+        let html = `
+          <div class="header">
+            <h1>${profile.name || 'Your Name'}</h1>
+            <div class="title">${profile.title || 'Professional Title'}</div>
+            <div class="contact">
+              ${profile.email ? `<div>Email: ${profile.email}</div>` : ''}
+              ${profile.phone ? `<div>Phone: ${profile.phone}</div>` : ''}
+              ${profile.location ? `<div>Location: ${profile.location}</div>` : ''}
+              ${profile.linkedin ? `<div>LinkedIn: ${profile.linkedin}</div>` : ''}
+            </div>
+          </div>
+        `;
+
+        if (profile.bio) {
+          html += `<div class="section"><h2>Professional Summary</h2><p>${profile.bio}</p></div>`;
+        }
+
+        if (experience.length > 0) {
+          html += `<div class="section"><h2>Work Experience</h2>`;
+          experience.forEach(exp => {
+            html += `
+              <div class="job">
+                <div class="job-header">
+                  <div>
+                    <div class="job-title">${exp.job_title}</div>
+                    <div class="company">${exp.company}${exp.location ? `, ${exp.location}` : ''}</div>
+                  </div>
+                  <div class="date">${exp.start_date} — ${exp.current ? 'Present' : exp.end_date}</div>
+                </div>
+                ${exp.description ? `<div class="description">${exp.description}</div>` : ''}
+                ${exp.highlights && exp.highlights.length > 0 ? `<ul class="highlights">${exp.highlights.map(h => `<li>${h}</li>`).join('')}</ul>` : ''}
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        if (skills.length > 0) {
+          html += `<div class="section"><h2>Skills</h2>`;
+          for (const [cat, catSkills] of Object.entries(skillsByCategory)) {
+            html += `<div class="skill-category"><h3>${cat}</h3><p>${catSkills.map(s => s.name).join(', ')}</p></div>`;
+          }
+          html += `</div>`;
+        }
+
+        if (projects.length > 0) {
+          html += `<div class="section"><h2>Key Projects</h2>`;
+          projects.forEach(p => {
+            html += `
+              <div class="project">
+                <h3>${p.title}</h3>
+                <p>${p.description || ''}</p>
+                ${p.tech_stack && p.tech_stack.length > 0 ? `<p style="font-size:9pt;color:#555;">Technologies: ${p.tech_stack.join(', ')}</p>` : ''}
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        if (education.length > 0) {
+          html += `<div class="section"><h2>Education</h2>`;
+          education.forEach(edu => {
+            html += `
+              <div class="edu-item">
+                <div class="edu-header">
+                  <div>
+                    <div style="font-weight:bold;">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</div>
+                    <div>${edu.institution}${edu.location ? `, ${edu.location}` : ''}</div>
+                  </div>
+                  <div class="date">${edu.start_year} — ${edu.end_year || 'Present'}</div>
+                </div>
+                ${edu.grade ? `<div style="font-size:9pt;color:#555;">Grade: ${edu.grade}</div>` : ''}
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        if (achievements.length > 0) {
+          html += `<div class="section"><h2>Achievements</h2>`;
+          achievements.forEach(a => {
+            html += `<div class="achievement"><h3>${a.title}</h3><p>${a.issuer} — ${a.date}</p></div>`;
+          });
+          html += `</div>`;
+        }
+
+        document.getElementById('resume-content').innerHTML = html;
+      } catch (error) {
+        document.getElementById('resume-content').innerHTML = '<div style="color:red;text-align:center;">Error loading resume. Please try again.</div>';
+        console.error(error);
+      }
+    }
+
+    loadATSResume();
+  </script>
+</body>
+</html>
