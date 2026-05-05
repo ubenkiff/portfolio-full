@@ -69,7 +69,7 @@
   </div>
 
   <script>
-   const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
+   const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
     async function loadPortfolio() {
       try {
@@ -81,6 +81,13 @@
           fetch(`${API_URL}/projects`).then(r => r.json()),
           fetch(`${API_URL}/achievements`).then(r => r.json())
         ]);
+
+        // Debug: Check if bio exists
+        console.log('Profile bio:', profile.bio);
+
+        // Ensure bio is a string and handle line breaks
+        const bioText = profile.bio || '';
+        const formattedBio = bioText ? bioText.replace(/\n/g, '<br>') : '';
 
         // Group skills by category
         const skillsByCategory = {};
@@ -95,14 +102,14 @@
             <div class="flex flex-col md:flex-row gap-6 items-center">
               ${profile.avatar_url ? `<img src="${profile.avatar_url}" class="w-32 h-32 rounded-full object-cover border-4 border-blue-500">` : '<div class="w-32 h-32 rounded-full bg-slate-700 flex items-center justify-center"><i class="fas fa-user text-4xl text-slate-500"></i></div>'}
               <div class="text-center md:text-left">
-                <h1 class="text-3xl md:text-4xl font-bold text-white">${profile.name || 'Uddi Benkiff Awinda'}</h1>
-                <p class="text-xl text-blue-400 mt-2">${profile.title || 'PM | Civil Projects Engineer | Structural Design Engineer'}</p>
-                <p class="text-slate-300 mt-4 leading-relaxed">${profile.bio || ''}</p>
+                <h1 class="text-3xl md:text-4xl font-bold text-white">${escapeHtml(profile.name) || 'Uddi Benkiff Awinda'}</h1>
+                <p class="text-xl text-blue-400 mt-2">${escapeHtml(profile.title) || 'PM | Civil Projects Engineer | Structural Design Engineer'}</p>
+                ${formattedBio ? `<p class="text-slate-300 mt-4 leading-relaxed">${formattedBio}</p>` : ''}
                 <div class="flex flex-wrap gap-4 mt-4 justify-center md:justify-start text-slate-400">
-                  ${profile.email ? `<span><i class="fas fa-envelope text-blue-400 mr-1"></i> ${profile.email}</span>` : ''}
-                  ${profile.phone ? `<span><i class="fas fa-phone text-green-400 mr-1"></i> ${profile.phone}</span>` : ''}
-                  ${profile.location ? `<span><i class="fas fa-map-marker-alt text-red-400 mr-1"></i> ${profile.location}</span>` : ''}
-                  ${profile.linkedin ? `<a href="${profile.linkedin}" target="_blank" class="hover:text-blue-400 transition"><i class="fab fa-linkedin text-blue-400 mr-1"></i> LinkedIn</a>` : ''}
+                  ${profile.email ? `<span><i class="fas fa-envelope text-blue-400 mr-1"></i> ${escapeHtml(profile.email)}</span>` : ''}
+                  ${profile.phone ? `<span><i class="fas fa-phone text-green-400 mr-1"></i> ${escapeHtml(profile.phone)}</span>` : ''}
+                  ${profile.location ? `<span><i class="fas fa-map-marker-alt text-red-400 mr-1"></i> ${escapeHtml(profile.location)}</span>` : ''}
+                  ${profile.linkedin ? `<a href="${escapeHtml(profile.linkedin)}" target="_blank" class="hover:text-blue-400 transition"><i class="fab fa-linkedin text-blue-400 mr-1"></i> LinkedIn</a>` : ''}
                 </div>
               </div>
             </div>
@@ -118,13 +125,13 @@
             <div class="mb-6">
               <div class="flex flex-wrap justify-between items-start">
                 <div>
-                  <h3 class="text-lg font-semibold text-white">${exp.job_title}</h3>
-                  <p class="text-blue-400">${exp.company}${exp.location ? ` | ${exp.location}` : ''}</p>
+                  <h3 class="text-lg font-semibold text-white">${escapeHtml(exp.job_title)}</h3>
+                  <p class="text-blue-400">${escapeHtml(exp.company)}${exp.location ? ` | ${escapeHtml(exp.location)}` : ''}</p>
                 </div>
-                <span class="text-slate-400 text-sm">${exp.start_date} — ${exp.current ? 'Present' : exp.end_date}</span>
+                <span class="text-slate-400 text-sm">${escapeHtml(exp.start_date)} — ${exp.current ? 'Present' : escapeHtml(exp.end_date)}</span>
               </div>
-              <p class="text-slate-300 mt-2">${exp.description || ''}</p>
-              ${exp.highlights && exp.highlights.length > 0 ? `<ul class="mt-2 space-y-1">${exp.highlights.map(h => `<li class="text-slate-400 text-sm flex items-start gap-2"><i class="fas fa-circle text-blue-500 text-xs mt-1.5"></i>${h}</li>`).join('')}</ul>` : ''}
+              <p class="text-slate-300 mt-2">${escapeHtml(exp.description) || ''}</p>
+              ${exp.highlights && exp.highlights.length > 0 ? `<ul class="mt-2 space-y-1">${exp.highlights.map(h => `<li class="text-slate-400 text-sm flex items-start gap-2"><i class="fas fa-circle text-blue-500 text-xs mt-1.5"></i>${escapeHtml(h)}</li>`).join('')}</ul>` : ''}
               ${index < experience.length - 1 ? '<div class="border-b border-slate-700 mt-4 pt-2"></div>' : ''}
             </div>
           `;
@@ -140,9 +147,9 @@
         for (const [category, catSkills] of Object.entries(skillsByCategory)) {
           html += `
             <div>
-              <h3 class="text-md font-semibold text-blue-400 mb-3">${category}</h3>
+              <h3 class="text-md font-semibold text-blue-400 mb-3">${escapeHtml(category)}</h3>
               <div class="flex flex-wrap gap-2">
-                ${catSkills.map(s => `<span class="px-3 py-1.5 bg-slate-700 rounded-lg text-sm text-slate-300">${s.name}${s.level ? ` <span class="text-blue-400">(${s.level})</span>` : ''}</span>`).join('')}
+                ${catSkills.map(s => `<span class="px-3 py-1.5 bg-slate-700 rounded-lg text-sm text-slate-300">${escapeHtml(s.name)}${s.level ? ` <span class="text-blue-400">(${escapeHtml(s.level)})</span>` : ''}</span>`).join('')}
               </div>
             </div>
           `;
@@ -180,10 +187,10 @@
                 </div>
               ` : ''}
               <div class="p-5">
-                <h3 class="text-lg font-semibold text-white mb-2">${project.title}</h3>
-                <p class="text-slate-300 text-sm leading-relaxed">${project.description || ''}</p>
-                ${project.tech_stack && project.tech_stack.length > 0 ? `<div class="flex flex-wrap gap-2 mt-3">${project.tech_stack.map(t => `<span class="px-2 py-1 bg-slate-600 rounded-md text-xs text-slate-300">${t}</span>`).join('')}</div>` : ''}
-                ${project.live_url ? `<div class="mt-3"><a href="${project.live_url}" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm"><i class="fas fa-external-link-alt mr-1"></i>View Project</a></div>` : ''}
+                <h3 class="text-lg font-semibold text-white mb-2">${escapeHtml(project.title)}</h3>
+                <p class="text-slate-300 text-sm leading-relaxed">${escapeHtml(project.description) || ''}</p>
+                ${project.tech_stack && project.tech_stack.length > 0 ? `<div class="flex flex-wrap gap-2 mt-3">${project.tech_stack.map(t => `<span class="px-2 py-1 bg-slate-600 rounded-md text-xs text-slate-300">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+                ${project.live_url ? `<div class="mt-3"><a href="${escapeHtml(project.live_url)}" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm"><i class="fas fa-external-link-alt mr-1"></i>View Project</a></div>` : ''}
               </div>
             </div>
           `;
@@ -203,13 +210,13 @@
             <div class="mb-4 last:mb-0">
               <div class="flex flex-wrap justify-between items-start">
                 <div>
-                  <h3 class="text-md font-semibold text-white">${edu.degree}${edu.field ? ` in ${edu.field}` : ''}</h3>
-                  <p class="text-blue-400">${edu.institution}${edu.location ? `, ${edu.location}` : ''}</p>
+                  <h3 class="text-md font-semibold text-white">${escapeHtml(edu.degree)}${edu.field ? ` in ${escapeHtml(edu.field)}` : ''}</h3>
+                  <p class="text-blue-400">${escapeHtml(edu.institution)}${edu.location ? `, ${escapeHtml(edu.location)}` : ''}</p>
                 </div>
-                <span class="text-slate-400 text-sm">${edu.start_year} — ${edu.end_year || 'Present'}</span>
+                <span class="text-slate-400 text-sm">${escapeHtml(edu.start_year)} — ${edu.end_year ? escapeHtml(edu.end_year) : 'Present'}</span>
               </div>
-              ${edu.grade ? `<p class="text-yellow-500 text-sm mt-1"><i class="fas fa-star mr-1"></i>Grade: ${edu.grade}</p>` : ''}
-              ${edu.description ? `<p class="text-slate-300 text-sm mt-1">${edu.description}</p>` : ''}
+              ${edu.grade ? `<p class="text-yellow-500 text-sm mt-1"><i class="fas fa-star mr-1"></i>Grade: ${escapeHtml(edu.grade)}</p>` : ''}
+              ${edu.description ? `<p class="text-slate-300 text-sm mt-1">${escapeHtml(edu.description)}</p>` : ''}
             </div>
             ${education.indexOf(edu) < education.length - 1 ? '<div class="border-b border-slate-700 my-3"></div>' : ''}
           `;
@@ -224,9 +231,9 @@
         achievements.forEach(ach => {
           html += `
             <div class="mb-3 last:mb-0 border-l-2 border-yellow-500 pl-3">
-              <h3 class="text-md font-semibold text-white">${ach.title}</h3>
-              <p class="text-slate-400 text-sm">${ach.issuer} • ${ach.date}</p>
-              ${ach.description ? `<p class="text-slate-300 text-xs mt-1">${ach.description}</p>` : ''}
+              <h3 class="text-md font-semibold text-white">${escapeHtml(ach.title)}</h3>
+              <p class="text-slate-400 text-sm">${escapeHtml(ach.issuer)} • ${escapeHtml(ach.date)}</p>
+              ${ach.description ? `<p class="text-slate-300 text-xs mt-1">${escapeHtml(ach.description)}</p>` : ''}
             </div>
             ${achievements.indexOf(ach) < achievements.length - 1 ? '<div class="border-b border-slate-700 my-2"></div>' : ''}
           `;
@@ -237,7 +244,7 @@
         // Footer
         html += `
           <div class="text-center text-slate-500 text-sm mt-8 pt-4 border-t border-slate-800">
-            <p>© ${new Date().getFullYear()} ${profile.name || 'Uddi Benkiff Awinda'} • Professional Portfolio</p>
+            <p>© ${new Date().getFullYear()} ${escapeHtml(profile.name) || 'Uddi Benkiff Awinda'} • Professional Portfolio</p>
           </div>
         `;
 
@@ -250,9 +257,20 @@
         });
 
       } catch (error) {
-        document.getElementById('content').innerHTML = `<div class="text-red-500 text-center p-8 bg-slate-800 rounded-2xl">Error loading portfolio. Make sure the backend is running on port 3000.<br><br>${error.message}</div>`;
+        document.getElementById('content').innerHTML = `<div class="text-red-500 text-center p-8 bg-slate-800 rounded-2xl">Error loading portfolio. Make sure the backend is running on port 3001.<br><br>${error.message}</div>`;
         console.error(error);
       }
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     window.prevImage = function(projectId) {
