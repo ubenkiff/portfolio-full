@@ -55,7 +55,7 @@
       background: #3b82f6;
     }
     @media print {
-      .no-print { display: none !important; }
+      .no-print { display: none; }
       body { background: white; }
       .bg-slate-800, .bg-slate-700 { background: white !important; border: 1px solid #ddd; }
       .text-white { color: black !important; }
@@ -64,16 +64,6 @@
   </style>
 </head>
 <body class="bg-slate-900">
-  <!-- Floating Action Buttons -->
-  <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 no-print">
-    <button onclick="window.location.href='/resume.html'" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition text-sm">
-      <i class="fas fa-print"></i> Printable Resume
-    </button>
-    <button onclick="window.location.href='/ats-resume.html'" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition text-sm">
-      <i class="fas fa-file-alt"></i> ATS Resume
-    </button>
-  </div>
-
   <div id="content" class="max-w-6xl mx-auto p-8">
     <div class="text-center text-white text-xl">Loading portfolio...</div>
   </div>
