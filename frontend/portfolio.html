@@ -69,7 +69,7 @@
   </div>
 
   <script>
-    const API_URL = '/api';
+   const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
 
     async function loadPortfolio() {
       try {
